@@ -1,113 +1,270 @@
-import Image from "next/image";
+'use client'
+import React, { useEffect, useState, useCallback, useId } from 'react';
+import DarkModeButton from "@/components/Buttons/DarkModeButton";
+import ClearButton from "@/components/Buttons/ClearButton";
+import Input from '@/components/Input'
+import { Task } from '@/types';
+import { TITLES, ICONS } from '@/constants';
+import { iterableArray, rearangeArr, search } from '@/utils';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import StrictModeDroppable from '@/components/StrictModeDroppable';
+import PlusIcon from '@/assets/svg/plus'
+import DraggableIcon from '@/assets/svg/drag'
+import SearchIcon from '@/assets/svg/search'
+import ListItem from '@/components/ListItem';
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    const [tasks, setTasks] = useState([[], [], []] as Task[][])
+    const [filteredTasks, setFilteredTasks] = useState([[], [], []] as Task[][])
+    const [isDark, setDark] = useState(false)
+    const [text, setText] = useState('')
+    const [searchTexts, setSearchTexts] = useState(['', '', ''])
+    const [inSearch, setInSearch] = useState([false, false, false])
+
+    useEffect(() => {
+        const storedTasks = localStorage.getItem('tasks')
+        let tasks = storedTasks ? JSON.parse(storedTasks) : [[], [], []];
+        setTasks(tasks as Task[][])
+
+    }, [])
+
+
+    const toggleModeCallback = useCallback((isDarkMode: boolean) => {
+        setDark(isDarkMode)
+    }, [isDark, setDark])
+
+    const onDragStart = () => {
+
+    };
+
+    const saveTasks = (nextTasks: Task[][]) => {
+        setTimeout(() => {
+            localStorage.setItem('tasks', JSON.stringify(nextTasks))
+        }, 1000)
+    }
+
+    const clearTasks = () => {
+        setTasks([[], [], []])
+        localStorage.removeItem('tasks')
+    }
+
+
+    const onChangeText = useCallback((e: any) => {
+        const text = e.target.value
+        setText(text)
+    }, [text, setText])
+
+    const addTask = useCallback((titleTask: string = text, columnIndex: number = 0) => {
+        const timestamp = Date.now()
+        const id = Date.now() + '-' + Math.random().toString(36).slice(2);
+
+        const newTask = {
+            id,
+            timestamp,
+            columnIndex,
+            titleTask,
+            finalized: false
+        }
+
+        let column = iterableArray(tasks[columnIndex])
+        column.push(newTask)
+        const nextTasks = iterableArray(tasks)
+        nextTasks.splice(columnIndex, 1, column)
+        setTasks(nextTasks)
+        saveTasks(nextTasks)
+        setText('')
+    }, [text, tasks,setText, setTasks, saveTasks, iterableArray])
+
+    const finalizeTask = (index: number, columnIndex: number, e: any) => {
+        const nextTasks = iterableArray(tasks)
+
+        const columnTask = iterableArray(nextTasks[columnIndex])
+        const task = columnTask[index]
+        const newTask = {
+            ...task,
+            finalized: e.target.checked
+        }
+
+        columnTask.splice(index, 1, newTask)
+
+        nextTasks.splice(columnIndex, 1, columnTask)
+        setTasks(nextTasks)
+        saveTasks(nextTasks)
+    }
+
+    const onDragEnd = (result: any) => {
+
+        const { source, destination } = result;
+        const nextTasks = iterableArray(tasks)
+
+        if (!destination) {
+            return;
+        }
+
+        if (destination.droppableId === source.droppableId) {
+            const sourceColumnIndex = parseInt(source.droppableId.replace('droppable-', ''))
+            const sourceColumn = iterableArray(tasks[sourceColumnIndex])
+            const rearangedColumn = rearangeArr(sourceColumn, source.index, destination.index)
+            nextTasks.splice(sourceColumnIndex, 1, rearangedColumn)
+            setTasks(nextTasks)
+
+        } else if (destination.droppableId !== source.droppableId) {
+            const sourceColumnIndex = parseInt(source.droppableId.replace('droppable-', ''))
+            const destinationColumnIndex = parseInt(destination.droppableId.replace('droppable-', ''))
+            const destinationColumn = iterableArray(tasks[destinationColumnIndex])
+            const sourceColumn = iterableArray(tasks[sourceColumnIndex])
+
+            destinationColumn.push(sourceColumn[source.index])
+            const rearangedDestinationColumn = rearangeArr(destinationColumn, destinationColumn.length - 1, destination.index)
+
+            sourceColumn.splice(source.index, 1)
+
+            nextTasks.splice(sourceColumnIndex, 1, sourceColumn)
+            nextTasks.splice(destinationColumnIndex, 1, rearangedDestinationColumn)
+            setTasks(nextTasks)
+        }
+        saveTasks(nextTasks)
+    };
+
+    const searchTask = (columnIndex: number) => {  
+        const allTasks = iterableArray(tasks);
+        const tasksByColumn = allTasks[columnIndex];
+        const searchIndexes = iterableArray(inSearch)
+        searchIndexes[columnIndex] = true
+        const filteredColumnTasks = search(searchTexts[columnIndex], tasksByColumn, [{type: 'string', key: 'titleTask'}])
+        allTasks.splice(columnIndex, 1, filteredColumnTasks)
+        setFilteredTasks(allTasks)
+        setInSearch(searchIndexes)
+    }
+
+    const onChangeTexts = (event : any, index: number) => {
+        const value = event.target.value
+        const values = iterableArray(searchTexts)
+        values[index] = value
+        setSearchTexts(values)
+    }
+
+    const resetInput = (index: number) => {
+        const searchIndexes = iterableArray(inSearch)
+        const values = iterableArray(searchTexts)
+
+        searchIndexes[index] = false
+        values[index] = ''
+
+        setSearchTexts(values)
+        setInSearch(searchIndexes)
+    }
+
+    const handleKeyDown = (event: any, index: number) => {
+        if (event.key === 'Enter') {
+            searchTask(index)
+        }
+      }
+
+      const handleKeyDownAdd = (event: any) => {
+        if (event.key === 'Enter') {
+            addTask()
+        }
+      }
+
+    const getTasks = inSearch.indexOf(true) > -1 ? filteredTasks : tasks
+
+    return (
+        <div className="flex items-center justify-center w-screen h-screen font-medium ">
+            <ClearButton clearCallback={clearTasks} />
+            <DarkModeButton toggleModeCallback={toggleModeCallback} />
+            <DragDropContext
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+            >
+
+                {
+                    getTasks.map((list, index) =>
+                        <StrictModeDroppable droppableId={`droppable-${index}`}>
+                            {(provided, snapshot) => (
+                                <div
+                                    key={index}
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    className="list-group flex items-center justify-center w-screen h-screen font-medium "
+
+                                >
+                                    <div className="flex flex-grow items-center justify-center h-full text-gray-600 bg-gray-100 dark:bg-blue-navy-intense dark:text-gray-100 min-h-48">
+                                        <div className='max-h-5/6'>
+                                        <div
+
+                                            className="max-w-full p-8 pt-0 bg-white rounded-lg shadow-lg w-96 dark:bg-blue-navy dark:text-gray-200 h-3/4 overflow-auto min-h-48">
+                                            <div>
+                                            <div className="flex items-center mb-6 bg-white dark:bg-blue-navy dark:text-gray-200 pt-8 pt-4" style={{ position: 'sticky', top: '0px' }}>
+                                                {ICONS[index](isDark)}
+                                                <h4 className="font-semibold ml-3 text-lg">{TITLES[index]}</h4>
+                                              
+                                            </div>
+                                            <Input
+                                                    placeholder="Rechercher une tâche"
+                                                    text={searchTexts[index]}
+                                                    onChangeText={(e) => onChangeTexts(e, index)}
+                                                    onKeyDown={(e) => handleKeyDown(e, index)}
+                                                    btnComponent={
+                                                        <button
+                                                            onClick={() => searchTask(index)}
+                                                            className="text-sm font-medium rounded">
+                                                            <SearchIcon/>
+                                                        </button>
+                                                    }
+                                                    rightComponent={inSearch[index] ? 
+                                                    <a onClick={() => resetInput(index)} className='badge'>x</a> 
+                                                    : null}
+                                                />
+                                            </div>
+                                            
+                                            
+                                            {
+                                                list.map((item, listIndex) =>
+                                                    <>
+                                                    <ListItem
+                                                        key={listIndex}
+                                                        item={item}
+                                                        listIndex={listIndex}
+                                                        index={index}
+                                                        isDark={isDark}
+                                                        finalizeTask={finalizeTask}
+                                                    />
+                                                    </>
+                                                )}
+                                            {
+                                                index == 0 ?
+                                                        <Input
+                                                            placeholder="Ajouter une nouvelle tâche"
+                                                            text={text}
+                                                            onChangeText={onChangeText}
+                                                            onKeyDown={handleKeyDownAdd}
+                                                            btnComponent={
+                                                                <button
+                                                                    onClick={() => addTask()}
+                                                                    className="text-sm font-medium rounded">
+                                                                   <PlusIcon/>
+                                                                </button>
+                                                            }
+                                                            rightComponent={null}
+                                                        />
+                                                    : null
+                                            }
+                                        </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            )}
+
+
+                        </StrictModeDroppable>
+                    )}
+
+
+            </DragDropContext>
         </div>
-      </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+    );
 }
