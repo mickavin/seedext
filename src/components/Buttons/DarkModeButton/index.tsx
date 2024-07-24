@@ -1,19 +1,36 @@
 'use client';
-import React, { useCallback, useState, useEffect } from "react"
+import React, { useEffect } from "react"
 import * as assets from '@/assets/stringifiedAssets';
+import { useTask } from "@/context";
 
-const DarkModeButton = ({ toggleModeCallback }: { toggleModeCallback: any }) => {
-    const toggleMode = (isInit = false) => {
+const DarkModeButton = ({ toggleModeCallback }: { toggleModeCallback: () => void }) => {
+    const { state } = useTask()
+    const { isDark } = state
+
+
+    useEffect(() => {
+        const switchToggle = document.querySelector('#switch-toggle');
+        const body = document.body;
+        if(switchToggle){
+            if(isDark){
+                switchToggle.classList.remove('bg-yellow-500', 'translate-x-15')
+                switchToggle.classList.add('bg-gray-700', 'translate-x-45')
+                body.classList.add('dark')
+                switchToggle.innerHTML = assets.MoonSvg
+            } else {
+                switchToggle.classList.add('bg-yellow-500', 'translate-x-15')
+                switchToggle.classList.remove('bg-gray-700', 'translate-x-45')
+                body.classList.remove('dark')
+                switchToggle.innerHTML = assets.SunSvg  
+            }
+        }
+    }, [])
+
+    const toggleMode = () => {
         if (typeof document !== "undefined") {
             const switchToggle = document.querySelector('#switch-toggle');
             const body = document.body;
-            let isDarkmode = window.localStorage.getItem('isDarkmode') == 'true' ? true : false;
-
-            if (!isInit) {
-                isDarkmode = !isDarkmode
-            }
-
-            if (isDarkmode && switchToggle && body) {
+            if (!isDark && switchToggle && body) {
                 switchToggle.classList.remove('bg-yellow-500', 'translate-x-15')
                 switchToggle.classList.add('bg-gray-700', 'translate-x-45')
                 body.classList.add('dark')
@@ -30,16 +47,10 @@ const DarkModeButton = ({ toggleModeCallback }: { toggleModeCallback: any }) => 
                     switchToggle.innerHTML = assets.SunSvg
                 }, 250);
             }
-            window.localStorage.setItem('isDarkmode', `${isDarkmode}`)
-            toggleModeCallback(isDarkmode)
+
+            toggleModeCallback()
         }
     }
-
-    useEffect(() => {
-        setTimeout(() => {
-            toggleMode(true)
-        }, 250);
-    }, [])
 
     return (
         <button

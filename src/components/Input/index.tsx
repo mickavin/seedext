@@ -1,13 +1,14 @@
 import React, { ChangeEventHandler, ReactNode } from "react";
 
-const Input = ({ onChangeText, text, placeholder, btnComponent, rightComponent, onKeyDown }:
+const Input = ({ text, placeholder, btnComponent, rightComponent, onFocus, onKeyDown, onChangeText, }:
     { 
-        onChangeText: ChangeEventHandler<HTMLInputElement>, 
         text: string, 
         placeholder: string, 
         btnComponent: ReactNode, 
         rightComponent: ReactNode, 
+        onFocus?: React.FocusEventHandler<HTMLInputElement>,
         onKeyDown: React.KeyboardEventHandler<HTMLInputElement> 
+        onChangeText: ChangeEventHandler<HTMLInputElement>, 
     }) => {
     return (
         <div className='flex w-full items-center h-8 px-2 mt-2' style={{ position: 'sticky', bottom: '0px' }}>
@@ -20,6 +21,7 @@ const Input = ({ onChangeText, text, placeholder, btnComponent, rightComponent, 
                 onChange={onChangeText}
                 enterKeyHint='enter'
                 onKeyDown={onKeyDown}
+                onFocus={onFocus}
             />
             {rightComponent}
         </div>

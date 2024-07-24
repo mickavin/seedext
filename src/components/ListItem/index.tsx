@@ -1,15 +1,24 @@
-import React, { ChangeEventHandler, ReactNode } from "react";
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import React from "react";
+import { Draggable } from 'react-beautiful-dnd';
 import DraggableIcon from '@/assets/svg/drag'
+import { useTask } from '@/context';
+import * as actions from '@/context/actions';
+import { Task } from "@/types";
 
 const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
     {
-        item: any,
+        item: Task,
         listIndex: number,
         index: number,
         isDark: boolean,
-        finalizeTask: any,
+        finalizeTask: (listIndex: number, index: number, event: any) => void,
     }) => {
+    const { dispatch } = useTask();
+
+    const removeTask = () => {
+        dispatch(actions.removeTaskAction(item))
+    }
+
     return (
         <Draggable key={item.id} draggableId={`draggable-${item.id}`} index={listIndex}>
             {(draggableProvided, draggableSnapshot) => (
@@ -19,8 +28,10 @@ const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
                     {...draggableProvided.draggableProps}
                     {...draggableProvided.dragHandleProps}
 
-                    className="list-group-item flex-column align-items-start">
-                    <div className='flex flex-row justify-between items-center my-2.5 h-10 px-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'>
+                    className="list-group-item flex-row align-items-start relative">
+                    <label
+                    htmlFor={`task_${index}_${listIndex}`}
+                    className='flex flex-row justify-between items-center my-2.5 h-10 px-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'>
                         <input
                             className="hidden"
                             type="checkbox"
@@ -28,9 +39,8 @@ const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
                             checked={item.finalized}
                             onChange={(e) => finalizeTask(listIndex, index, e)}
                         />
-                        <label
+                        <div
                             className="flex items-center "
-                            htmlFor={`task_${index}_${listIndex}`}
                         >
                             <span className="flex items-center justify-center w-5 h-5 text-transparent border-2 border-gray-300 rounded-full">
                                 <svg
@@ -47,9 +57,15 @@ const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
                                 </svg>
                             </span>
                             <span className="ml-4 text-sm">{item.titleTask}</span>
-                        </label>
+                        </div>
+                        <div className="flex flex-row justify-content-center items-center">
                         <DraggableIcon isDark={isDark} />
-                    </div>
+                        </div>
+                        
+
+                    </label>
+                    <a className="badge absolute badge-list" onClick={() => removeTask()}>x</a>
+
                 </div>
             )}
         </Draggable>

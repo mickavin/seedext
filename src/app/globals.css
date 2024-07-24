@@ -85,13 +85,13 @@ body {
   border-radius: 100px;
 }
 
-input[type=checkbox]:checked+label span:first-of-type {
+label input[type=checkbox]:checked+div span:first-of-type {
 	background-color: #10B981;
 	border-color: #10B981;
 	color: #fff;
 }
 
-input[type=checkbox]:checked+label span:nth-of-type(2) {
+label input[type=checkbox]:checked+div span:nth-of-type(2) {
 	text-decoration: line-through;
 	color: #9CA3AF;
 }
@@ -125,4 +125,15 @@ input[type=checkbox]:checked+label span:nth-of-type(2) {
     position: absolute;
     right: 0px;
     cursor: pointer;
+}
+
+.badge-list {
+  top: -5px;
+  right: -5px;
+}
+
+button.search-btn.active {
+  background-color: rgb(0 0 0 / 8%);
+  padding: 5px;
+  border-radius: 100%;
 }

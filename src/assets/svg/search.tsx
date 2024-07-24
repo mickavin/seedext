@@ -1,22 +1,23 @@
 import * as React from "react"
 
-function SvgComponent() {
-    return (
-        <svg
-            className="w-5 h-5 text-gray-400 fill-current"
-            viewBox="0 0 21 21"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path
-                d="M128.94 132.929l1.485 1.414-5.94 5.657-1.485-1.414 5.94-5.657zm7.71-.929c-2.895 0-5.25-2.243-5.25-5s2.355-5 5.25-5 5.25 2.243 5.25 5-2.355 5-5.25 5zm0-12c-4.06 0-7.35 3.134-7.35 7s3.29 7 7.35 7 7.35-3.134 7.35-7-3.29-7-7.35-7z"
-                transform="translate(-179 -280) translate(56 160)"
-                fill="#000"
-                stroke="none"
-                strokeWidth={1}
-                fillRule="evenodd"
-            />
-        </svg>
-    )
+function SvgComponent({isDark}: {isDark: boolean}) {
+  return (
+    <svg
+      fill={isDark ? "#fff" : "#444"} 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 32 32" 
+      width="25px"
+      height="25px"
+      >
+      <path
+      fill={isDark ? "#fff" : "#444"} 
+      d="M25.39 6.61a8 8 0 00-11.66 11l-1.65 1.64-.66-.67L3.94 26l2 2 7.48-7.48-.67-.66 1.64-1.65a8 8 0 0011-11.66zM6 26.65L5.35 26l6.07-6 .62.62zm18.7-9.42a7 7 0 110-9.91 7 7 0 01-.02 9.91z"
+      />
+      <path 
+      fill={isDark ? "#fff" : "#444"} 
+      d="M15.49 8a6 6 0 000 8.47l.71-.71a5 5 0 010-7z" />
+    </svg>
+  )
 }
 
 export default SvgComponent
