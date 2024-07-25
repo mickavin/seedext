@@ -2,7 +2,7 @@
 import React from "react"
 import trash from '@/assets/svg/trash'
 
-const DarkModeButton = ({ clearCallback }: { clearCallback: () => void }) => {
+const ClearButton = ({ clearCallback }: { clearCallback: () => void }) => {
     const onClick = () => {
         clearCallback()
     }
@@ -18,4 +18,4 @@ const DarkModeButton = ({ clearCallback }: { clearCallback: () => void }) => {
     )
 }
 
-export default DarkModeButton
+export default ClearButton

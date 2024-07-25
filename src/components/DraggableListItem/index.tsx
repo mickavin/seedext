@@ -5,7 +5,7 @@ import { useTask } from '@/context';
 import * as actions from '@/context/actions';
 import { Task } from "@/types";
 
-const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
+const DraggableListItem = ({ item, listIndex, index, isDark, finalizeTask } :
     {
         item: Task,
         listIndex: number,
@@ -21,7 +21,7 @@ const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
 
     return (
         <Draggable key={item.id} draggableId={`draggable-${item.id}`} index={listIndex}>
-            {(draggableProvided, draggableSnapshot) => (
+            {(draggableProvided) => (
                 <div
                     id={`draggable-${item.id}`}
                     ref={draggableProvided.innerRef}
@@ -72,4 +72,4 @@ const ListItem = ({ item, listIndex, index, isDark, finalizeTask } :
     )
 }
 
-export default ListItem
+export default DraggableListItem

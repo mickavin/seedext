@@ -3,7 +3,7 @@ import { TITLES, ICONS } from '@/constants';
 import Input from '@/components/Input';
 import PlusIcon from '@/assets/svg/plus';
 import SearchIcon from '@/assets/svg/search';
-import ListItem from '@/components/ListItem';
+import DraggableListItem from '@/components/DraggableListItem';
 import { useTask } from '@/context';
 import { iterableArray } from '@/utils';
 import * as actions from '@/context/actions';
@@ -128,7 +128,7 @@ const Card = ({ provided, index, list, searchTexts, inSearch, automaticSearch, s
                         {
                             list.map((item, listIndex) =>
                                 <>
-                                    <ListItem
+                                    <DraggableListItem
                                         key={listIndex}
                                         item={item}
                                         listIndex={listIndex}
