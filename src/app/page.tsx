@@ -55,12 +55,13 @@ const Home : React.FC = () => {
                 <DragDropContext onDragEnd={onDragEnd}>
                     {
                         getTasks.map((list, index) =>
-                            <StrictModeDroppable droppableId={`droppable-${index}`}>
+                            <StrictModeDroppable 
+                            key={index}
+                            droppableId={`droppable-${index}`}>
                                 {(provided) => (
                                     <CardContent
                                     provided={provided}
                                     index={index}
-                                    key={index}
                                     searchTask={searchTask}
                                     list={list}
                                     setSearchTexts={setSearchTexts}
